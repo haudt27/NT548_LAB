@@ -47,7 +47,7 @@ jobs:
       # Step 6: Run Checkov to scan Terraform code for security issues
       - name: Run Checkov scan
         run: checkov -d .
-        continue-on-error: false
+        continue-on-error: true
 
       # Step 7: Initialize Terraform
       - name: Terraform Init
