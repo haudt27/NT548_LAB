@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing dependencies..."
+      - pip install --upgrade pip
+      - pip install cfn-lint # Cài đặt công cụ cfn-lint
+
+  pre_build:
+    commands:
+      - echo "Starting check CloudFormation..."
+
+  build:
+    commands:
+      - echo "Checking file main_stack.yaml by cfn-lint..."
+      - cfn-lint main_stack.yaml #kiểm tra file YAML với cfn-lint
+      - echo "Cheking complete!."
+
+  post_build:
+    commands:
+      - echo "Checking complete!."
+
+artifacts:
+  files:
+    - main_stack.yaml # Return file main_stack.yaml
+  discard-paths: no

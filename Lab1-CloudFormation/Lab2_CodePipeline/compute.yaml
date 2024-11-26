@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: 'Compute Stack with separate Key Pairs for Public and Private Instances.'
+
+Parameters:
+  Name:
+    Description: 'The name of the stack, used to identify resources created by this template.'
+    Type: 'String'
+    MinLength: '1'
+    MaxLength: '255'
+    Default: 'LAB1-EC2'
+    ConstraintDescription: 'Must be a valid stack name with a length between 1 and 255 characters.'
+
+  KeyNamePublic:
+    Description: 'The name of an existing EC2 KeyPair to enable SSH access to the public instance. This KeyPair must already exist in the AWS region.'
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: 'Must be the name of an existing EC2 KeyPair.'
+
+  KeyNamePrivate:
+    Description: 'The name of an existing EC2 KeyPair to enable SSH access to the private instance. This KeyPair must already exist in the AWS region.'
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: 'Must be the name of an existing EC2 KeyPair.' 
+
+
+  VPC:
+    Description: 'The ID of the VPC where the EC2 instances will be launched. This VPC must already exist.'
+    Type: AWS::EC2::VPC::Id
+
+  LatestAmiId:
+    Description: 'The ID of the latest Amazon Machine Image (AMI) to use for the EC2 instances. This parameter uses the AWS Systems Manager Parameter Store to get the latest AMI ID.'
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+
+  PublicSubnetID:
+    Description: 'The ID of the public subnet where the public EC2 instance will be launched. This subnet must already exist within the specified VPC.'
+    Type: AWS::EC2::Subnet::Id
+
+  PrivateSubnetID:
+    Description: 'The ID of the private subnet where the private EC2 instance will be launched. This subnet must already exist within the specified VPC.'
+    Type: AWS::EC2::Subnet::Id
+
+  SecurityGroupPublicInstanceID:
+    Description: 'The ID of the security group to be associated with the public EC2 instance. This security group must allow SSH access from the specified IP range.'
+    Type: AWS::EC2::SecurityGroup::Id
+
+  SecurityGroupPrivateInstanceID:
+    Description: 'The ID of the security group to be associated with the private EC2 instance. This security group must allow necessary access from the public subnet.'
+    Type: AWS::EC2::SecurityGroup::Id
+
+  InstanceType:
+    Description: 'The type of EC2 instance to launch. This parameter allows selection from a list of valid instance types, such as t2.micro, t3.small, etc.'
+    Type: String
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - t3.nano
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - c5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
+      - c5.9xlarge
+      - g3.8xlarge
+      - r5.large
+      - r5.xlarge
+      - r5.2xlarge
+      - r5.4xlarge
+      - i3.xlarge
+      - i3.2xlarge
+      - i3.4xlarge
+      - i3.8xlarge
+      - d2.xlarge
+      - d2.2xlarge
+      - d2.4xlarge
+      - d2.8xlarge
+    Default: t2.micro
+    ConstraintDescription: 'Must be a valid EC2 instance type from the allowed values list.'
+
+Resources:
+  EC2PublicInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PublicSubnetID
+      SecurityGroupIds:
+        - !Ref SecurityGroupPublicInstanceID
+      KeyName: !Ref KeyNamePublic
+      ImageId: !Ref LatestAmiId
+      Tags:
+        - Key: Lab01
+          Value: 'EC2PublicInstance'
+        - Key: Name
+          Value: !Join
+            - ''
+            - - !Ref Name
+              - '-public-EC2'
+
+  EC2PrivateInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PrivateSubnetID
+      SecurityGroupIds:
+        - !Ref SecurityGroupPrivateInstanceID
+      KeyName: !Ref KeyNamePrivate
+      ImageId: !Ref LatestAmiId
+      Tags:
+        - Key: Lab01
+          Value: 'EC2PrivateInstance'
+        - Key: Name
+          Value: !Join
+            - ''
+            - - !Ref Name
+              - '-private-EC2'
+
+Outputs:
+  EC2PublicInstanceId:
+    Description: EC2 Public Instance ID
+    Value: !Ref EC2PublicInstance
+    Export:
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-EC2PublicInstanceId
+
+  EC2PrivateInstanceId:
+    Description: EC2 Private Instance ID
+    Value: !Ref EC2PrivateInstance
+    Export:
+      Name: !Sub ${AWS::Region}-${AWS::StackName}-EC2PrivateInstanceId
