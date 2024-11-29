@@ -4,7 +4,7 @@
 
 1) Create Ubuntu VM using AWS EC2 (t2.medium) <br/>
 2) Enable 8080 Port Number in Security Group Inbound Rules
-3) Connect to VM using MobaXterm
+3) Connect to VM using SSH
 
 ## Step-2 : Instal Java ##
 
